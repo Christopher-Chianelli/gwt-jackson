@@ -8,17 +8,27 @@ import com.github.nmorel.gwtjackson.client.stream.JsonWriter;
 /**
  * Serializes a value by using a supplied Jackson JsonSerializer 
  *
- * @param <T>
+ * @param <T> The type this Serializer serializes
  */
-public class JacksonJsonSerializer<T> extends JsonSerializer<T> {
+public abstract class JacksonJsonSerializer<T> extends JsonSerializer<T> {
 
     com.fasterxml.jackson.databind.JsonSerializer<T> jacksonSerializer;
 
-    @Override
-    protected void doSerialize(JsonWriter writer, T value, JsonSerializationContext ctx,
-            JsonSerializerParameters params) {
-        // TODO Auto-generated method stub
+    public JacksonJsonSerializer(com.fasterxml.jackson.databind.JsonSerializer<T> jacksonSerializer) {
+        this.jacksonSerializer = jacksonSerializer;
+    }
 
+    @Override
+    protected void doSerialize(JsonWriter writer,
+                               T value,
+                               JsonSerializationContext ctx,
+                               JsonSerializerParameters params) {
+        try {
+            jacksonSerializer.serialize(value, new JacksonGeneratorImpl(writer),
+                                        new JacksonSerializerProvider(writer, ctx, params));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

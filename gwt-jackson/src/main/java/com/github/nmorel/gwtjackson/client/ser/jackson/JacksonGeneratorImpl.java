@@ -18,6 +18,9 @@ import com.fasterxml.jackson.core.json.JsonWriteContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nmorel.gwtjackson.client.stream.JsonWriter;
 
+/**
+ * Maps JsonGenerator methods to JsonWriter methods
+ */
 public class JacksonGeneratorImpl extends JsonGenerator {
 
     private JsonWriter writer;
