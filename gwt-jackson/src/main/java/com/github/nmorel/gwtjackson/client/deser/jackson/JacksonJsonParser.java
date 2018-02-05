@@ -16,6 +16,8 @@ import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.core.json.JsonReadContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nmorel.gwtjackson.client.stream.JsonReader;
 
 public class JacksonJsonParser extends JsonParser {
@@ -24,15 +26,34 @@ public class JacksonJsonParser extends JsonParser {
     Object value;
     String currentName;
     boolean hasClosed;
+    boolean isCurrentTokenCleared;
+    JsonReadContext parsingContext;
+    ObjectCodec codec;
+
     Stack<String> fieldNameStack;
     Stack<JsonToken> tokenStack;
     Stack<List<Object>> arrayStack;
     Stack<Map<String, Object>> objectStack;
+    JsonToken currentToken;
+    JsonToken lastClearedToken;
     com.github.nmorel.gwtjackson.client.stream.JsonToken first;
+
+    public JacksonJsonParser(JsonReader reader) {
+        this.reader = reader;
+        this.hasClosed = false;
+        this.isCurrentTokenCleared = true;
+        this.parsingContext = JsonReadContext.createRootContext(null);
+
+        this.fieldNameStack = new Stack<String>();
+        this.tokenStack = new Stack<JsonToken>();
+        this.arrayStack = new Stack<List<Object>>();
+        this.objectStack = new Stack<Map<String, Object>>();
+        this.codec = new ObjectMapper();
+    }
 
     @Override
     public void clearCurrentToken() {
-        // TODO
+        lastClearedToken = currentToken;
     }
 
     @Override
@@ -43,25 +64,28 @@ public class JacksonJsonParser extends JsonParser {
 
     @Override
     public BigInteger getBigIntegerValue() throws IOException {
-        return BigInteger.valueOf(value);
+        if (value instanceof Integer) {
+            return BigInteger.valueOf((Integer) value);
+        } else {
+            return (BigInteger) value;
+        }
+
     }
 
     @Override
-    public byte[] getBinaryValue(Base64Variant arg0) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+    public byte[] getBinaryValue(Base64Variant base64Convertor) throws IOException {
+        return base64Convertor.decode(getText());
     }
 
     @Override
     public ObjectCodec getCodec() {
-        // TODO Auto-generated method stub
-        return null;
+        return codec;
     }
 
     @Override
     public JsonLocation getCurrentLocation() {
-        // TODO Auto-generated method stub
-        return null;
+        return new JsonLocation(reader.getInput(), reader.getInput().length(), reader.getLineNumber(), reader
+                .getColumnNumber());
     }
 
     @Override
@@ -71,128 +95,149 @@ public class JacksonJsonParser extends JsonParser {
 
     @Override
     public JsonToken getCurrentToken() {
-        // TODO Auto-generated method stub
-        return null;
+        if (isCurrentTokenCleared) {
+            return null;
+        }
+        return currentToken;
     }
 
     @Override
     public int getCurrentTokenId() {
-        // TODO Auto-generated method stub
-        return 0;
+        return currentToken.id();
     }
 
     @Override
     public BigDecimal getDecimalValue() throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        return BigDecimal.valueOf((Double) value);
     }
 
     @Override
     public double getDoubleValue() throws IOException {
-        // TODO Auto-generated method stub
-        return 0;
+        return (Double) value;
     }
 
     @Override
     public float getFloatValue() throws IOException {
-        // TODO Auto-generated method stub
-        return 0;
+        return (Float) value;
     }
 
     @Override
     public int getIntValue() throws IOException {
-        // TODO Auto-generated method stub
-        return 0;
+        return (Integer) value;
     }
 
     @Override
     public JsonToken getLastClearedToken() {
-        // TODO Auto-generated method stub
-        return null;
+        return lastClearedToken;
     }
 
     @Override
     public long getLongValue() throws IOException {
-        // TODO Auto-generated method stub
-        return 0;
+        return (Long) value;
     }
 
     @Override
     public NumberType getNumberType() throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        if (value instanceof Integer) {
+            return NumberType.INT;
+        } else if (value instanceof BigInteger) {
+            return NumberType.BIG_INTEGER;
+        } else if (value instanceof Double) {
+            return NumberType.DOUBLE;
+        }
+        throw new IllegalStateException("The value (" + value.toString() + ") is not a number.");
     }
 
     @Override
     public Number getNumberValue() throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof BigInteger) {
+            return (BigInteger) value;
+        } else if (value instanceof Double) {
+            return (Double) value;
+        }
+        throw new IllegalStateException("The value (" + value.toString() + ") is not a number.");
     }
 
     @Override
     public JsonStreamContext getParsingContext() {
-        // TODO Auto-generated method stub
-        return null;
+        return parsingContext;
     }
 
     @Override
     public String getText() throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        switch (currentToken) {
+            case FIELD_NAME:
+                return currentName;
+            case VALUE_NUMBER_FLOAT:
+                return getDecimalValue().toPlainString();
+            case VALUE_NUMBER_INT:
+                return getBigIntegerValue().toString();
+            case VALUE_STRING:
+                return (String) value;
+            case VALUE_TRUE:
+                return "true";
+            case VALUE_FALSE:
+                return "false";
+            case NOT_AVAILABLE:
+            case VALUE_NULL:
+            case START_ARRAY:
+            case START_OBJECT:
+            case VALUE_EMBEDDED_OBJECT:
+            case END_ARRAY:
+            case END_OBJECT:
+                return null;
+            default:
+                throw new IllegalStateException("The token (" + reader.peek().name()
+                        + ") does not have a case in JacksonJsonParser.getText().");
+        }
     }
 
     @Override
     public char[] getTextCharacters() throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+        return getText().toCharArray();
     }
 
     @Override
     public int getTextLength() throws IOException {
-        // TODO Auto-generated method stub
-        return 0;
+        return getText().length();
     }
 
     @Override
     public int getTextOffset() throws IOException {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
     public JsonLocation getTokenLocation() {
-        // TODO Auto-generated method stub
-        return null;
+        return getCurrentLocation();
     }
 
     @Override
-    public String getValueAsString(String arg0) throws IOException {
-        // TODO Auto-generated method stub
-        return null;
+    public String getValueAsString(String defaultValue) throws IOException {
+        String text = getText();
+        return (null != text) ? text : defaultValue;
     }
 
     @Override
     public boolean hasCurrentToken() {
-        // TODO Auto-generated method stub
-        return false;
+        return !isCurrentTokenCleared;
     }
 
     @Override
     public boolean hasTextCharacters() {
-        // TODO Auto-generated method stub
-        return false;
+        return true;
     }
 
     @Override
-    public boolean hasToken(JsonToken arg0) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean hasToken(JsonToken token) {
+        return currentToken() == token;
     }
 
     @Override
-    public boolean hasTokenId(int arg0) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean hasTokenId(int tokenId) {
+        return currentTokenId() == tokenId;
     }
 
     @Override
@@ -202,60 +247,85 @@ public class JacksonJsonParser extends JsonParser {
 
     @Override
     public JsonToken nextToken() throws IOException {
+        isCurrentTokenCleared = false;
         if (null == first) {
             first = reader.peek();
         }
         switch (reader.peek()) {
             case BEGIN_ARRAY:
                 reader.beginArray();
+                parsingContext = parsingContext.createChildArrayContext(reader.getLineNumber(), reader
+                        .getColumnNumber());
                 tokenStack.add(JsonToken.START_ARRAY);
                 arrayStack.add(new ArrayList<Object>());
-                return JsonToken.START_ARRAY;
+                currentToken = JsonToken.START_ARRAY;
+                break;
             case BEGIN_OBJECT:
                 reader.beginObject();
+                parsingContext = parsingContext.createChildObjectContext(reader.getLineNumber(), reader
+                        .getColumnNumber());
                 tokenStack.add(JsonToken.START_OBJECT);
                 objectStack.add(new HashMap<String, Object>());
-                return JsonToken.START_OBJECT;
+                currentToken = JsonToken.START_OBJECT;
+                break;
             case BOOLEAN:
                 value = reader.nextBoolean();
                 handleToken(value);
                 if ((Boolean) value) {
-                    return JsonToken.VALUE_TRUE;
+                    currentToken = JsonToken.VALUE_TRUE;
                 } else {
-                    return JsonToken.VALUE_FALSE;
+                    currentToken = JsonToken.VALUE_FALSE;
                 }
+                break;
             case END_ARRAY:
+                parsingContext = parsingContext.clearAndGetParent();
                 value = arrayStack.pop();
                 tokenStack.pop();
                 handleToken(value);
                 reader.endArray();
-                return JsonToken.END_ARRAY;
+                currentToken = JsonToken.END_ARRAY;
+                break;
             case END_DOCUMENT:
                 return convertToJsonValue(first);
             case END_OBJECT:
+                parsingContext = parsingContext.clearAndGetParent();
                 value = objectStack.pop();
                 tokenStack.pop();
                 handleToken(value);
+                currentToken = JsonToken.END_OBJECT;
                 break;
             case NAME:
                 fieldNameStack.push(reader.nextName());
                 currentName = fieldNameStack.peek();
+                parsingContext.setCurrentName(currentName);
                 tokenStack.push(JsonToken.FIELD_NAME);
-                return JsonToken.FIELD_NAME;
+                currentToken = JsonToken.FIELD_NAME;
+                break;
             case NULL:
                 value = null;
                 handleToken(value);
-                return JsonToken.VALUE_NULL;
+                currentToken = JsonToken.VALUE_NULL;
+                break;
             case NUMBER:
-                // TODO
+                value = reader.nextNumber();
+                handleToken(value);
+                if (value instanceof Integer || value instanceof BigInteger) {
+                    currentToken = JsonToken.VALUE_NUMBER_INT;
+                } else {
+                    currentToken = JsonToken.VALUE_NUMBER_FLOAT;
+                }
                 break;
             case STRING:
-                // TODO
+                value = reader.nextString();
+                handleToken(value);
+                currentToken = JsonToken.VALUE_STRING;
                 break;
             default:
-                break;
+                throw new IllegalStateException("The token (" + reader.peek().name()
+                        + ") does not have a case in JacksonJsonParser.nextToken().");
 
         }
+        return currentToken;
     }
 
     private JsonToken convertToJsonValue(com.github.nmorel.gwtjackson.client.stream.JsonToken token) {
@@ -295,6 +365,7 @@ public class JacksonJsonParser extends JsonParser {
     }
 
     private void handleToken(Object value) {
+        parsingContext.setCurrentValue(value);
         switch (tokenStack.peek()) {
             case START_ARRAY:
                 arrayStack.peek().add(value);
@@ -336,9 +407,8 @@ public class JacksonJsonParser extends JsonParser {
     }
 
     @Override
-    public void setCodec(ObjectCodec arg0) {
-        // TODO Auto-generated method stub
-
+    public void setCodec(ObjectCodec codec) {
+        this.codec = codec;
     }
 
     @Override

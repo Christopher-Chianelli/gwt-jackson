@@ -1,5 +1,8 @@
 package com.github.nmorel.gwtjackson.client.deser.jackson;
 
+import java.io.IOException;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.nmorel.gwtjackson.client.JsonDeserializationContext;
 import com.github.nmorel.gwtjackson.client.JsonDeserializer;
 import com.github.nmorel.gwtjackson.client.JsonDeserializerParameters;
@@ -15,9 +18,14 @@ public abstract class JacksonJsonDeserializer<T> extends JsonDeserializer<T> {
 
     @Override
     protected T doDeserialize(JsonReader reader, JsonDeserializationContext ctx, JsonDeserializerParameters params) {
-        // TODO Auto-generated method stub
-        jacksonDeserializer.deserialize(new JacksonJsonParser(reader,ctx,params), new JacksonDeserializationContext(ctx,params))
-        return null;
+        try {
+            return jacksonDeserializer.deserialize(new JacksonJsonParser(reader), new JacksonDeserializationContext(ctx,
+                    params));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }
