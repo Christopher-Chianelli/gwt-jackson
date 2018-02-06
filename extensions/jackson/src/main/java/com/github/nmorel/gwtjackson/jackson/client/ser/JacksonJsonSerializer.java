@@ -1,4 +1,4 @@
-package com.github.nmorel.gwtjackson.client.ser.jackson;
+package com.github.nmorel.gwtjackson.jackson.client.ser;
 
 import com.github.nmorel.gwtjackson.client.JsonSerializationContext;
 import com.github.nmorel.gwtjackson.client.JsonSerializer;

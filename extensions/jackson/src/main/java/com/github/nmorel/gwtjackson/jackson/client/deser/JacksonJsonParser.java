@@ -1,4 +1,4 @@
-package com.github.nmorel.gwtjackson.client.deser.jackson;
+package com.github.nmorel.gwtjackson.jackson.client.deser;
 
 import java.io.IOException;
 import java.math.BigDecimal;

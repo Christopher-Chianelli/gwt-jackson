@@ -1,4 +1,4 @@
-package com.github.nmorel.gwtjackson.client.ser.jackson;
+package com.github.nmorel.gwtjackson.jackson.client.ser;
 
 import java.io.IOException;
 import java.io.InputStream;
