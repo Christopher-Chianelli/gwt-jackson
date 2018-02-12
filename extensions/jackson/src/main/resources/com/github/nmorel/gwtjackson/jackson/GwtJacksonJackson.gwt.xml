@@ -18,9 +18,11 @@
 <module>
 
   <inherits name="com.github.nmorel.gwtjackson.GwtJackson" />
-  <inherits name="com.fasterxml.jackson.core.JacksonCore" />
-  <inherits name="com.fasterxml.jackson.databind.JacksonDatabind" />
+  <inherits name='playn.Scene'/>
+  <!-- <inherits name="com.fasterxml.jackson.core.JacksonCore" />
+  <inherits name="com.fasterxml.jackson.databind.JacksonDatabind" /> -->
 
   <source path="client" />
-
+  <super-source path="supersources" />
+  
 </module>

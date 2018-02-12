@@ -17,6 +17,7 @@
 <module>
   <source path="">
     <include name="**/Base64Variant.java"/>
+    <include name="**/Base64Variants.java"/>
     <include name="**/JsonLocation.java"/>
     <include name="**/JsonGenerator.java"/>
     <include name="**/JsonParser.java"/>
