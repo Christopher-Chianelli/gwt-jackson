@@ -25,7 +25,7 @@
     <include name="**/ObjectMapper.java"/>
     <include name="**/ReadableObjectId.java"/>
     <include name="**/SerializerProvider.java"/>
-    <include name="**/UnresolvedForwardReferencejava"/>
+    <include name="**/UnresolvedForwardReference.java"/>
     <include name="**/WritableObjectId.java"/>
   </source>
 </module>

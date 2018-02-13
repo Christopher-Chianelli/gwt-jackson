@@ -35,18 +35,6 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
-     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <classifier>sources</classifier>
-      <version>2.8.10</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <classifier>sources</classifier>
-      <version>2.8.10</version>
-    </dependency>
     
     <!-- Provides ByteBuffer -->
      <dependency>
