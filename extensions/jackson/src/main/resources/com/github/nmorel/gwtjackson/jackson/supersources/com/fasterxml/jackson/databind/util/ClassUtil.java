@@ -155,9 +155,6 @@ public final class ClassUtil {
             }
             result.add(type);
         }
-        for (JavaType intCls : type.getInterfaces()) {
-            _addSuperTypes(intCls, endBefore, result, true);
-        }
         _addSuperTypes(type.getSuperClass(), endBefore, result, true);
     }
 
@@ -190,9 +187,6 @@ public final class ClassUtil {
      */
     public static String canBeABeanType(Class<?> type) {
         // First: language constructs that ain't beans:
-        if (type.isAnnotation()) {
-            return "annotation";
-        }
         if (type.isArray()) {
             return "array";
         }
@@ -272,56 +266,6 @@ public final class ClassUtil {
     /* Class loading
     /**********************************************************
      */
-
-    /**
-     * @deprecated Since 2.6, use method in {@link com.fasterxml.jackson.databind.type.TypeFactory}.
-     */
-    @Deprecated
-    public static Class<?> findClass(String className) throws ClassNotFoundException {
-        // [JACKSON-597]: support primitive types (and void)
-        if (className.indexOf('.') < 0) {
-            if ("int".equals(className))
-                return Integer.TYPE;
-            if ("long".equals(className))
-                return Long.TYPE;
-            if ("float".equals(className))
-                return Float.TYPE;
-            if ("double".equals(className))
-                return Double.TYPE;
-            if ("boolean".equals(className))
-                return Boolean.TYPE;
-            if ("byte".equals(className))
-                return Byte.TYPE;
-            if ("char".equals(className))
-                return Character.TYPE;
-            if ("short".equals(className))
-                return Short.TYPE;
-            if ("void".equals(className))
-                return Void.TYPE;
-        }
-        // Two-phase lookup: first using context ClassLoader; then default
-        Throwable prob = null;
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-
-        if (loader != null) {
-            try {
-                return Class.forName(className, true, loader);
-            } catch (Exception e) {
-                prob = getRootCause(e);
-            }
-        }
-        try {
-            return Class.forName(className);
-        } catch (Exception e) {
-            if (prob == null) {
-                prob = getRootCause(e);
-            }
-        }
-        if (prob instanceof RuntimeException) {
-            throw (RuntimeException) prob;
-        }
-        throw new ClassNotFoundException(prob.getMessage(), prob);
-    }
 
     /*
     /**********************************************************
@@ -684,7 +628,7 @@ public final class ClassUtil {
     }
 
     public static boolean isJacksonStdImpl(Class<?> implClass) {
-        return (implClass.getAnnotation(JacksonStdImpl.class) != null);
+        return false;
     }
 
     public static boolean isBogusClass(Class<?> cls) {
@@ -712,25 +656,21 @@ public final class ClassUtil {
      * @since 2.7
      */
     public static String getPackageName(Class<?> cls) {
-        Package pkg = cls.getPackage();
-        return (pkg == null) ? null : pkg.getName();
+        return null;
     }
 
     /**
      * @since 2.7
      */
     public static boolean hasEnclosingMethod(Class<?> cls) {
-        return !isObjectOrPrimitive(cls) && (cls.getEnclosingMethod() != null);
+        return false;
     }
 
     /**
      * @since 2.7
      */
     public static Annotation[] findClassAnnotations(Class<?> cls) {
-        if (isObjectOrPrimitive(cls)) {
-            return NO_ANNOTATIONS;
-        }
-        return cls.getDeclaredAnnotations();
+        return NO_ANNOTATIONS;
     }
 
     // // // Then methods that do NOT cache access but were considered
@@ -740,21 +680,21 @@ public final class ClassUtil {
      * @since 2.7
      */
     public static Class<?> getDeclaringClass(Class<?> cls) {
-        return isObjectOrPrimitive(cls) ? null : cls.getDeclaringClass();
+        return isObjectOrPrimitive(cls) ? null : null;
     }
 
     /**
      * @since 2.7
      */
     public static Type getGenericSuperclass(Class<?> cls) {
-        return cls.getGenericSuperclass();
+        return cls.getSuperclass();
     }
 
     /**
      * @since 2.7
      */
     public static Type[] getGenericInterfaces(Class<?> cls) {
-        return cls.getGenericInterfaces();
+        return new Type[0];
     }
 
     /**
@@ -762,11 +702,11 @@ public final class ClassUtil {
      */
     public static Class<?> getEnclosingClass(Class<?> cls) {
         // Caching does not seem worthwhile, as per profiling
-        return isObjectOrPrimitive(cls) ? null : cls.getEnclosingClass();
+        return isObjectOrPrimitive(cls) ? null : null;
     }
 
     private static Class<?>[] _interfaces(Class<?> cls) {
-        return cls.getInterfaces();
+        return new Class<?>[0];
     }
 
     /*

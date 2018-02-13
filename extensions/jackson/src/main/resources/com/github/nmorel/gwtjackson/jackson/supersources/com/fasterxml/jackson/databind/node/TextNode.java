@@ -12,13 +12,15 @@ import com.fasterxml.jackson.databind.SerializerProvider;
  * Value node that contains a text value.
  */
 public class TextNode
-    extends ValueNode
-{
+        extends ValueNode {
+
     final static TextNode EMPTY_STRING_NODE = new TextNode("");
 
     protected final String _value;
 
-    public TextNode(String v) { _value = v; }
+    public TextNode(String v) {
+        _value = v;
+    }
 
     /**
      * Factory method that should be used to construct instances.
@@ -29,8 +31,7 @@ public class TextNode
      * @return Resulting {@link TextNode} object, if <b>v</b>
      *   is NOT null; null if it is.
      */
-    public static TextNode valueOf(String v)
-    {
+    public static TextNode valueOf(String v) {
         if (v == null) {
             return null;
         }
@@ -45,7 +46,10 @@ public class TextNode
         return JsonNodeType.STRING;
     }
 
-    @Override public JsonToken asToken() { return JsonToken.VALUE_STRING; }
+    @Override
+    public JsonToken asToken() {
+        return JsonToken.VALUE_STRING;
+    }
 
     @Override
     public String textValue() {
@@ -58,15 +62,13 @@ public class TextNode
      * data is returned.
      */
     @SuppressWarnings("resource")
-    public byte[] getBinaryValue(Base64Variant b64variant) throws IOException
-    {
+    public byte[] getBinaryValue(Base64Variant b64variant) throws IOException {
         ByteArrayBuilder builder = new ByteArrayBuilder(100);
         final String str = _value;
         int ptr = 0;
         int len = str.length();
 
-        main_loop:
-        while (ptr < len) {
+        main_loop: while (ptr < len) {
             // first, we'll skip preceding white space, if any
             char ch;
             do {
@@ -115,7 +117,8 @@ public class TextNode
                 }
                 ch = str.charAt(ptr++);
                 if (!b64variant.usesPaddingChar(ch)) {
-                    _reportInvalidBase64(b64variant, ch, 3, "expected padding character '"+b64variant.getPaddingChar()+"'");
+                    _reportInvalidBase64(b64variant, ch, 3, "expected padding character '" + b64variant.getPaddingChar()
+                            + "'");
                 }
                 // Got 12 bits, only need 8, need to shift
                 decodedData >>= 4;
@@ -155,7 +158,7 @@ public class TextNode
     public byte[] binaryValue() throws IOException {
         return getBinaryValue(Base64Variants.getDefaultVariant());
     }
-    
+
     /* 
     /**********************************************************
     /* General type coercions
@@ -171,7 +174,7 @@ public class TextNode
     public String asText(String defaultValue) {
         return (_value == null) ? defaultValue : _value;
     }
-    
+
     // note: neither fast nor elegant, but these work for now:
 
     @Override
@@ -187,7 +190,7 @@ public class TextNode
         }
         return defaultValue;
     }
-    
+
     @Override
     public int asInt(int defaultValue) {
         return NumberInput.parseAsInt(_value, defaultValue);
@@ -197,21 +200,20 @@ public class TextNode
     public long asLong(long defaultValue) {
         return NumberInput.parseAsLong(_value, defaultValue);
     }
-    
+
     @Override
     public double asDouble(double defaultValue) {
         return NumberInput.parseAsDouble(_value, defaultValue);
     }
-    
+
     /* 
     /**********************************************************
     /* Serialization
     /**********************************************************
      */
-    
+
     @Override
-    public final void serialize(JsonGenerator g, SerializerProvider provider) throws IOException
-    {
+    public final void serialize(JsonGenerator g, SerializerProvider provider) throws IOException {
         if (_value == null) {
             g.writeNull();
         } else {
@@ -224,27 +226,29 @@ public class TextNode
     /* Overridden standard methods
     /**********************************************************
      */
-    
+
     @Override
-    public boolean equals(Object o)
-    {
-        if (o == this) return true;
-        if (o == null) return false;
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (o == null)
+            return false;
         if (o instanceof TextNode) {
             return ((TextNode) o)._value.equals(_value);
         }
         return false;
     }
-    
+
     @Override
-    public int hashCode() { return _value.hashCode(); }
+    public int hashCode() {
+        return _value.hashCode();
+    }
 
     /**
      * Different from other values, Strings need quoting
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         int len = _value.length();
         len = len + 2 + (len >> 4);
         StringBuilder sb = new StringBuilder(len);
@@ -252,8 +256,7 @@ public class TextNode
         return sb.toString();
     }
 
-    protected static void appendQuoted(StringBuilder sb, String content)
-    {
+    protected static void appendQuoted(StringBuilder sb, String content) {
         sb.append('"');
         CharTypes.appendQuoted(sb, content);
         sb.append('"');
@@ -266,8 +269,7 @@ public class TextNode
      */
 
     protected void _reportInvalidBase64(Base64Variant b64variant, char ch, int bindex)
-        throws JsonParseException
-    {
+            throws JsonParseException {
         _reportInvalidBase64(b64variant, ch, bindex, null);
     }
 
@@ -276,18 +278,16 @@ public class TextNode
      *   and 3 (as unit has exactly 4 characters)
      */
     protected void _reportInvalidBase64(Base64Variant b64variant, char ch, int bindex, String msg)
-        throws JsonParseException
-    {
+            throws JsonParseException {
         String base;
         if (ch <= ' ') {
-            base = "Illegal white space character (code 0x"+Integer.toHexString(ch)+") as character #"+(bindex+1)+" of 4-char base64 unit: can only used between units";
+            base = "Illegal white space character (code 0x" + Integer.toHexString(ch) + ") as character #" + (bindex
+                    + 1) + " of 4-char base64 unit: can only used between units";
         } else if (b64variant.usesPaddingChar(ch)) {
-            base = "Unexpected padding character ('"+b64variant.getPaddingChar()+"') as character #"+(bindex+1)+" of 4-char base64 unit: padding only legal as 3rd or 4th character";
-        } else if (!Character.isDefined(ch) || Character.isISOControl(ch)) {
-            // Not sure if we can really get here... ? (most illegal xml chars are caught at lower level)
-            base = "Illegal character (code 0x"+Integer.toHexString(ch)+") in base64 content";
+            base = "Unexpected padding character ('" + b64variant.getPaddingChar() + "') as character #" + (bindex + 1)
+                    + " of 4-char base64 unit: padding only legal as 3rd or 4th character";
         } else {
-            base = "Illegal character '"+ch+"' (code 0x"+Integer.toHexString(ch)+") in base64 content";
+            base = "Illegal character '" + ch + "' (code 0x" + Integer.toHexString(ch) + ") in base64 content";
         }
         if (msg != null) {
             base = base + ": " + msg;

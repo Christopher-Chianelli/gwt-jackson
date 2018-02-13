@@ -1,6 +1,5 @@
 package com.fasterxml.jackson.databind;
 
-import java.text.DateFormat;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.*;
@@ -215,22 +214,6 @@ public final class SerializationConfig
         _formatWriteFeaturesToChange = src._formatWriteFeaturesToChange;
     }
 
-    /**
-     * Copy-constructor used for making a copy to be used by new {@link ObjectMapper}.
-     *
-     * @since 2.8
-     */
-    protected SerializationConfig(SerializationConfig src, ConfigOverrides configOverrides) {
-        super(src, configOverrides);
-        _serFeatures = src._serFeatures;
-        _serializationInclusion = src._serializationInclusion;
-        _defaultPrettyPrinter = src._defaultPrettyPrinter;
-        _generatorFeatures = src._generatorFeatures;
-        _generatorFeaturesToChange = src._generatorFeaturesToChange;
-        _formatWriteFeatures = src._formatWriteFeatures;
-        _formatWriteFeaturesToChange = src._formatWriteFeaturesToChange;
-    }
-
     /*
     /**********************************************************
     /* Life-cycle, factory methods from MapperConfig
@@ -283,23 +266,6 @@ public final class SerializationConfig
                         _formatWriteFeatures, _formatWriteFeaturesToChange);
     }
 
-    /**
-     * In addition to constructing instance with specified date format,
-     * will enable or disable <code>SerializationFeature.WRITE_DATES_AS_TIMESTAMPS</code>
-     * (enable if format set as null; disable if non-null)
-     */
-    @Override
-    public SerializationConfig with(DateFormat df) {
-        SerializationConfig cfg = new SerializationConfig(this, _base.withDateFormat(df));
-        // Also need to toggle this feature based on existence of date format:
-        if (df == null) {
-            cfg = cfg.with(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        } else {
-            cfg = cfg.without(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        }
-        return cfg;
-    }
-
     @Override
     public SerializationConfig with(PropertyNamingStrategy pns) {
         return _withBase(_base.withPropertyNamingStrategy(pns));
@@ -330,11 +296,6 @@ public final class SerializationConfig
     @Override
     public SerializationConfig with(Locale l) {
         return _withBase(_base.with(l));
-    }
-
-    @Override
-    public SerializationConfig with(TimeZone tz) {
-        return _withBase(_base.with(tz));
     }
 
     @Override
@@ -706,26 +667,12 @@ public final class SerializationConfig
 
     @Override
     public JsonInclude.Value getDefaultPropertyInclusion(Class<?> baseType) {
-        ConfigOverride overrides = findConfigOverride(baseType);
-        if (overrides != null) {
-            JsonInclude.Value v = overrides.getInclude();
-            if (v != null) {
-                return v;
-            }
-        }
         return _serializationInclusion;
     }
 
     @Override
     public JsonInclude.Value getDefaultPropertyInclusion(Class<?> baseType,
             JsonInclude.Value defaultIncl) {
-        ConfigOverride overrides = findConfigOverride(baseType);
-        if (overrides != null) {
-            JsonInclude.Value v = overrides.getInclude();
-            if (v != null) {
-                return v;
-            }
-        }
         return defaultIncl;
     }
 

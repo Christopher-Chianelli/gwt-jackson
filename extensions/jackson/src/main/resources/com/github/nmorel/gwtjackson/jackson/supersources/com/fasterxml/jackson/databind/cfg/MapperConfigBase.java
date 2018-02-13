@@ -1,6 +1,5 @@
 package com.fasterxml.jackson.databind.cfg;
 
-import java.text.DateFormat;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.*;
@@ -45,13 +44,6 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
      */
     protected final ContextAttributes _attributes;
 
-    /**
-     * Configuration overrides to apply, keyed by type of property.
-     *
-     * @since 2.8
-     */
-    protected final ConfigOverrides _configOverrides;
-
     /*
     /**********************************************************
     /* Construction
@@ -64,22 +56,12 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
      *
      * @since 2.8
      */
-    protected MapperConfigBase(BaseSettings base,
-            ConfigOverrides configOverrides) {
+    protected MapperConfigBase(BaseSettings base) {
         super(base, DEFAULT_MAPPER_FEATURES);
         _rootName = null;
         _view = null;
         // default to "no attributes"
         _attributes = ContextAttributes.getEmpty();
-        _configOverrides = configOverrides;
-    }
-
-    /**
-     * @deprecated Since 2.8, remove from 2.9 or later
-     */
-    @Deprecated
-    protected MapperConfigBase(BaseSettings base) {
-        this(base, null);
     }
 
     /**
@@ -91,7 +73,6 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
         _rootName = src._rootName;
         _view = src._view;
         _attributes = src._attributes;
-        _configOverrides = src._configOverrides;
     }
 
     protected MapperConfigBase(MapperConfigBase<CFG, T> src, BaseSettings base) {
@@ -99,7 +80,6 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
         _rootName = src._rootName;
         _view = src._view;
         _attributes = src._attributes;
-        _configOverrides = src._configOverrides;
     }
 
     protected MapperConfigBase(MapperConfigBase<CFG, T> src, int mapperFeatures) {
@@ -107,7 +87,6 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
         _rootName = src._rootName;
         _view = src._view;
         _attributes = src._attributes;
-        _configOverrides = src._configOverrides;
     }
 
     protected MapperConfigBase(MapperConfigBase<CFG, T> src, PropertyName rootName) {
@@ -115,7 +94,6 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
         _rootName = rootName;
         _view = src._view;
         _attributes = src._attributes;
-        _configOverrides = src._configOverrides;
     }
 
     protected MapperConfigBase(MapperConfigBase<CFG, T> src, Class<?> view) {
@@ -123,7 +101,6 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
         _rootName = src._rootName;
         _view = view;
         _attributes = src._attributes;
-        _configOverrides = src._configOverrides;
     }
 
     /**
@@ -134,18 +111,6 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
         _rootName = src._rootName;
         _view = src._view;
         _attributes = attr;
-        _configOverrides = src._configOverrides;
-    }
-
-    /**
-     * @since 2.8
-     */
-    protected MapperConfigBase(MapperConfigBase<CFG, T> src, ConfigOverrides configOverrides) {
-        super(src);
-        _rootName = src._rootName;
-        _view = src._view;
-        _attributes = src._attributes;
-        _configOverrides = configOverrides;
     }
 
     /*
@@ -159,16 +124,6 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
     /* Addition fluent factory methods, common to all sub-types
     /**********************************************************
      */
-
-    /**
-     * Method for constructing and returning a new instance with different
-     * {@link DateFormat}
-     * to use.
-     *<p>
-     * NOTE: make sure to register new instance with <code>ObjectMapper</code>
-     * if directly calling this method.
-     */
-    public abstract T with(DateFormat df);
 
     /**
      * Method for constructing and returning a new instance with different
@@ -229,12 +184,6 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
      * default {@link java.util.Locale} to use for formatting.
      */
     public abstract T with(Locale l);
-
-    /**
-     * Method for constructing and returning a new instance with different
-     * default {@link java.util.TimeZone} to use for formatting of date values.
-     */
-    public abstract T with(TimeZone tz);
 
     /**
      * Method for constructing and returning a new instance with different
@@ -318,33 +267,12 @@ public abstract class MapperConfigBase<CFG extends ConfigFeature,
      */
 
     @Override
-    public final ConfigOverride findConfigOverride(Class<?> type) {
-        return _configOverrides.findOverride(type);
-    }
-
-    @Override
     public final JsonFormat.Value getDefaultPropertyFormat(Class<?> type) {
-        ConfigOverride overrides = _configOverrides.findOverride(type);
-        if (overrides != null) {
-            JsonFormat.Value v = overrides.getFormat();
-            if (v != null) {
-                return v;
-            }
-        }
         return EMPTY_FORMAT;
     }
 
     @Override
     public final JsonIgnoreProperties.Value getDefaultPropertyIgnorals(Class<?> type) {
-        ConfigOverride overrides = _configOverrides.findOverride(type);
-        if (overrides != null) {
-            JsonIgnoreProperties.Value v = overrides.getIgnorals();
-            if (v != null) {
-                return v;
-            }
-        }
-        // 01-May-2015, tatu: Could return `Value.empty()` but for now `null`
-        //   seems simpler as callers can avoid processing.
         return null;
     }
 

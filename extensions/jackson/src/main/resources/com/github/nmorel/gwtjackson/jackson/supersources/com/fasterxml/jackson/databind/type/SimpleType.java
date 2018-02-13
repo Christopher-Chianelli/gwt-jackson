@@ -147,19 +147,6 @@ public class SimpleType // note: until 2.6 was final
             return new SimpleType(subclass, _bindings, superb,
                     null, _valueHandler, _typeHandler, _asStatic);
         }
-        // if not found, try a super-interface
-        Class<?>[] nextI = subclass.getInterfaces();
-        for (Class<?> iface : nextI) {
-            if (iface == _class) { // directly implemented
-                return new SimpleType(subclass, _bindings, null,
-                        new JavaType[]{this}, _valueHandler, _typeHandler, _asStatic);
-            }
-            if (ClassUtils.isAssignableFrom(_class, iface)) { // indirect, so recurse
-                JavaType superb = _narrow(iface);
-                return new SimpleType(subclass, _bindings, null,
-                        new JavaType[]{superb}, _valueHandler, _typeHandler, _asStatic);
-            }
-        }
         // should not get here but...
         throw new IllegalArgumentException("Internal error: Can not resolve sub-type for Class " + subclass.getName()
                 + " to "

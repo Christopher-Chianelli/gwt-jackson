@@ -1,6 +1,5 @@
 package com.fasterxml.jackson.databind;
 
-import java.text.DateFormat;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.*;
@@ -9,8 +8,6 @@ import com.fasterxml.jackson.core.*;
 
 import com.fasterxml.jackson.databind.cfg.*;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.fasterxml.jackson.databind.introspect.*;
-import com.fasterxml.jackson.databind.jsontype.*;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.util.LinkedNode;
@@ -100,9 +97,8 @@ public final class DeserializationConfig
     /**
      * Constructor used by ObjectMapper to create default configuration object instance.
      */
-    public DeserializationConfig(BaseSettings base,
-            ConfigOverrides configOverrides) {
-        super(base, configOverrides);
+    public DeserializationConfig(BaseSettings base) {
+        super(base);
         _deserFeatures = collectFeatureDefaults(DeserializationFeature.class);
         _nodeFactory = JsonNodeFactory.instance;
         _problemHandlers = null;
@@ -110,14 +106,6 @@ public final class DeserializationConfig
         _parserFeaturesToChange = 0;
         _formatReadFeatures = 0;
         _formatReadFeaturesToChange = 0;
-    }
-
-    /**
-     * @deprecated Since 2.8, remove from 2.9 or later
-     */
-    @Deprecated
-    public DeserializationConfig(BaseSettings base) {
-        this(base, null);
     }
 
     private DeserializationConfig(DeserializationConfig src,
@@ -216,22 +204,6 @@ public final class DeserializationConfig
         _formatReadFeaturesToChange = src._formatReadFeaturesToChange;
     }
 
-    /**
-     * Copy-constructor used for making a copy used by new {@link ObjectMapper}.
-     *
-     * @since 2.8
-     */
-    protected DeserializationConfig(DeserializationConfig src, ConfigOverrides configOverrides) {
-        super(src, configOverrides);
-        _deserFeatures = src._deserFeatures;
-        _problemHandlers = src._problemHandlers;
-        _nodeFactory = src._nodeFactory;
-        _parserFeatures = src._parserFeatures;
-        _parserFeaturesToChange = src._parserFeaturesToChange;
-        _formatReadFeatures = src._formatReadFeatures;
-        _formatReadFeaturesToChange = src._formatReadFeaturesToChange;
-    }
-
     // for unit tests only:
     protected BaseSettings getBaseSettings() {
         return _base;
@@ -305,11 +277,6 @@ public final class DeserializationConfig
     }
 
     @Override
-    public DeserializationConfig with(DateFormat df) {
-        return _withBase(_base.withDateFormat(df));
-    }
-
-    @Override
     public DeserializationConfig withView(Class<?> view) {
         return (_view == view) ? this : new DeserializationConfig(this, view);
     }
@@ -317,11 +284,6 @@ public final class DeserializationConfig
     @Override
     public DeserializationConfig with(Locale l) {
         return _withBase(_base.with(l));
-    }
-
-    @Override
-    public DeserializationConfig with(TimeZone tz) {
-        return _withBase(_base.with(tz));
     }
 
     @Override
@@ -684,26 +646,12 @@ public final class DeserializationConfig
 
     @Override
     public JsonInclude.Value getDefaultPropertyInclusion(Class<?> baseType) {
-        ConfigOverride overrides = findConfigOverride(baseType);
-        if (overrides != null) {
-            JsonInclude.Value v = overrides.getInclude();
-            if (v != null) {
-                return v;
-            }
-        }
         return EMPTY_INCLUDE;
     }
 
     @Override
     public JsonInclude.Value getDefaultPropertyInclusion(Class<?> baseType,
             JsonInclude.Value defaultIncl) {
-        ConfigOverride overrides = findConfigOverride(baseType);
-        if (overrides != null) {
-            JsonInclude.Value v = overrides.getInclude();
-            if (v != null) {
-                return v;
-            }
-        }
         return defaultIncl;
     }
 

@@ -1,7 +1,6 @@
 package com.fasterxml.jackson.databind;
 
 import java.io.IOException;
-import java.text.DateFormat;
 
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -143,13 +142,6 @@ public abstract class SerializerProvider
      * map that contains serializers previously fetched.
      */
     protected final ReadOnlyClassToSerializerMap _knownSerializers;
-
-    /**
-     * Lazily acquired and instantiated formatter object: initialized
-     * first time it is needed, reused afterwards. Used via instances
-     * (not blueprints), so that access need not be thread-safe.
-     */
-    protected DateFormat _dateFormat;
 
     /**
      * Flag set to indicate that we are using vanilla null value serialization

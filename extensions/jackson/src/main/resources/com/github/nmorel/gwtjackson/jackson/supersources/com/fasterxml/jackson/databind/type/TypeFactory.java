@@ -132,11 +132,6 @@ public final class TypeFactory
 
     protected final TypeParser _parser;
 
-    /**
-     * ClassLoader used by this factory [databind#624].
-     */
-    protected final ClassLoader _classLoader;
-
     /*
     /**********************************************************
     /* Life-cycle
@@ -157,11 +152,10 @@ public final class TypeFactory
         _typeCache = typeCache;
         _parser = new TypeParser(this);
         _modifiers = null;
-        _classLoader = null;
     }
 
     protected TypeFactory(LRUMap<Object, JavaType> typeCache, TypeParser p,
-            TypeModifier[] mods, ClassLoader classLoader) {
+            TypeModifier[] mods) {
         if (typeCache == null) {
             typeCache = new LRUMap<Object, JavaType>(16, 200);
         }
@@ -169,7 +163,6 @@ public final class TypeFactory
         // As per [databind#894] must ensure we have back-linkage from TypeFactory:
         _parser = p.withFactory(this);
         _modifiers = mods;
-        _classLoader = classLoader;
     }
 
     public TypeFactory withModifier(TypeModifier mod) {
@@ -185,11 +178,7 @@ public final class TypeFactory
         } else {
             mods = ArrayBuilders.insertInListNoDup(_modifiers, mod);
         }
-        return new TypeFactory(typeCache, _parser, mods, _classLoader);
-    }
-
-    public TypeFactory withClassLoader(ClassLoader classLoader) {
-        return new TypeFactory(_typeCache, _parser, _modifiers, classLoader);
+        return new TypeFactory(typeCache, _parser, mods);
     }
 
     /**
@@ -200,7 +189,7 @@ public final class TypeFactory
      * @since 2.8
      */
     public TypeFactory withCache(LRUMap<Object, JavaType> cache) {
-        return new TypeFactory(cache, _parser, _modifiers, _classLoader);
+        return new TypeFactory(cache, _parser, _modifiers);
     }
 
     /**
@@ -224,10 +213,6 @@ public final class TypeFactory
      */
     public void clearCache() {
         _typeCache.clear();
-    }
-
-    public ClassLoader getClassLoader() {
-        return _classLoader;
     }
 
     /*
@@ -264,54 +249,6 @@ public final class TypeFactory
     /* Low-level helper methods
     /**********************************************************
      */
-
-    /**
-     * Low-level lookup method moved from {@link com.fasterxml.jackson.databind.util.ClassUtil},
-     * to allow for overriding of lookup functionality in environments like OSGi.
-     *
-     * @since 2.6
-     */
-    public Class<?> findClass(String className) throws ClassNotFoundException {
-        if (className.indexOf('.') < 0) {
-            Class<?> prim = _findPrimitive(className);
-            if (prim != null) {
-                return prim;
-            }
-        }
-        // Two-phase lookup: first using context ClassLoader; then default
-        Throwable prob = null;
-        ClassLoader loader = this.getClassLoader();
-        if (loader == null) {
-            loader = Thread.currentThread().getContextClassLoader();
-        }
-        if (loader != null) {
-            try {
-                return classForName(className, true, loader);
-            } catch (Exception e) {
-                prob = ClassUtil.getRootCause(e);
-            }
-        }
-        try {
-            return classForName(className);
-        } catch (Exception e) {
-            if (prob == null) {
-                prob = ClassUtil.getRootCause(e);
-            }
-        }
-        if (prob instanceof RuntimeException) {
-            throw (RuntimeException) prob;
-        }
-        throw new ClassNotFoundException(prob.getMessage(), prob);
-    }
-
-    protected Class<?> classForName(String name, boolean initialize,
-            ClassLoader loader) throws ClassNotFoundException {
-        return Class.forName(name, true, loader);
-    }
-
-    protected Class<?> classForName(String name) throws ClassNotFoundException {
-        return Class.forName(name);
-    }
 
     protected Class<?> _findPrimitive(String className) {
         if ("int".equals(className))
@@ -402,7 +339,7 @@ public final class TypeFactory
                 }
             }
             // (3) Sub-class does not take type parameters -- just resolve subtype
-            int typeParamCount = subclass.getTypeParameters().length;
+            int typeParamCount = 0;
             if (typeParamCount == 0) {
                 newType = _fromClass(null, subclass, TypeBindings.emptyBindings());
                 break;
@@ -773,12 +710,8 @@ public final class TypeFactory
     public MapType constructMapType(Class<? extends Map> mapClass,
             Class<?> keyClass, Class<?> valueClass) {
         JavaType kt, vt;
-        if (mapClass == Properties.class) {
-            kt = vt = CORE_TYPE_STRING;
-        } else {
-            kt = _fromClass(null, keyClass, EMPTY_BINDINGS);
-            vt = _fromClass(null, valueClass, EMPTY_BINDINGS);
-        }
+        kt = _fromClass(null, keyClass, EMPTY_BINDINGS);
+        vt = _fromClass(null, valueClass, EMPTY_BINDINGS);
         return constructMapType(mapClass, kt, vt);
     }
 
@@ -1031,23 +964,19 @@ public final class TypeFactory
         JavaType kt, vt;
 
         // 28-May-2015, tatu: Properties are special, as per [databind#810]; fake "correct" parameter sig
-        if (rawClass == Properties.class) {
-            kt = vt = CORE_TYPE_STRING;
-        } else {
-            List<JavaType> typeParams = bindings.getTypeParameters();
-            // ok to have no types ("raw")
-            switch (typeParams.size()) {
-                case 0: // acceptable?
-                    kt = vt = _unknownType();
-                    break;
-                case 2:
-                    kt = typeParams.get(0);
-                    vt = typeParams.get(1);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Strange Map type " + rawClass.getName()
-                            + ": can not determine type parameters");
-            }
+        List<JavaType> typeParams = bindings.getTypeParameters();
+        // ok to have no types ("raw")
+        switch (typeParams.size()) {
+            case 0: // acceptable?
+                kt = vt = _unknownType();
+                break;
+            case 2:
+                kt = typeParams.get(0);
+                vt = typeParams.get(1);
+                break;
+            default:
+                throw new IllegalArgumentException("Strange Map type " + rawClass.getName()
+                        + ": can not determine type parameters");
         }
         return MapType.construct(rawClass, bindings, superClass, superInterfaces, kt, vt);
     }
@@ -1251,13 +1180,9 @@ public final class TypeFactory
             }
 
             // 19-Oct-2015, tatu: Bit messy, but we need to 'fix' java.util.Properties here...
-            if (rawType == Properties.class) {
-                result = MapType.construct(rawType, bindings, superClass, superInterfaces,
-                        CORE_TYPE_STRING, CORE_TYPE_STRING);
-            }
             // And then check what flavor of type we got. Start by asking resolved
             // super-type if refinement is all that is needed?
-            else if (superClass != null) {
+            if (superClass != null) {
                 result = superClass.refine(rawType, bindings, superClass, superInterfaces);
             }
             // if not, perhaps we are now resolving a well-known class or interface?

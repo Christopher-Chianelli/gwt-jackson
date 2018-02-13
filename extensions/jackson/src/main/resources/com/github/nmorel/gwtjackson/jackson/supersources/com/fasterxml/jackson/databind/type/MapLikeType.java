@@ -78,13 +78,9 @@ public class MapLikeType extends TypeBase {
             JavaType valueT) {
         // First: may need to fabricate TypeBindings (needed for refining into
         // concrete collection types, as per [databind#1102])
-        TypeVariable<?>[] vars = rawType.getTypeParameters();
         TypeBindings bindings;
-        if ((vars == null) || (vars.length != 2)) {
-            bindings = TypeBindings.emptyBindings();
-        } else {
-            bindings = TypeBindings.create(rawType, keyT, valueT);
-        }
+        bindings = TypeBindings.emptyBindings();
+
         return new MapLikeType(rawType, bindings, _bogusSuperClass(rawType),
                 null, keyT, valueT, null, null, false);
     }

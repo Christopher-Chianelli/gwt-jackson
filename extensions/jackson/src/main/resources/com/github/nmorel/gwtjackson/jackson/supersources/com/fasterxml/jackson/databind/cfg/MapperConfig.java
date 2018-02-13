@@ -1,8 +1,6 @@
 package com.fasterxml.jackson.databind.cfg;
 
-import java.text.DateFormat;
 import java.util.Locale;
-import java.util.TimeZone;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.Base64Variant;
@@ -339,42 +337,11 @@ public abstract class MapperConfig<T extends MapperConfig<T>>
      */
     public abstract JsonIgnoreProperties.Value getDefaultPropertyIgnorals(Class<?> baseType);
 
-    /**
-     * Accessor for finding possible {@link ConfigOverride} to use for
-     * properties of given type. Note that only directly associate override
-     * is found; no type hierarchy traversal is performed.
-     *
-     * @since 2.8
-     * 
-     * @return Override object if there is an override for specified type; `null` if not
-     */
-    public abstract ConfigOverride findConfigOverride(Class<?> type);
-
     /*
     /**********************************************************
     /* Configuration: other
     /**********************************************************
      */
-
-    /**
-     * Method for accessing currently configured (textual) date format
-     * that will be used for reading or writing date values (in case
-     * of writing, only if textual output is configured; not if dates
-     * are to be serialized as time stamps).
-     *<p>
-     * Note that typically {@link DateFormat} instances are <b>not thread-safe</b>
-     * (at least ones provided by JDK):
-     * this means that calling code should clone format instance before
-     * using it.
-     *<p>
-     * This method is usually only called by framework itself, since there
-     * are convenience methods available via
-     * {@link DeserializationContext} and {@link SerializerProvider} that
-     * take care of cloning and thread-safe reuse.
-     */
-    public final DateFormat getDateFormat() {
-        return _base.getDateFormat();
-    }
 
     /**
      * Method for accessing the default {@link java.util.Locale} to use
@@ -383,15 +350,6 @@ public abstract class MapperConfig<T extends MapperConfig<T>>
      */
     public final Locale getLocale() {
         return _base.getLocale();
-    }
-
-    /**
-     * Method for accessing the default {@link java.util.TimeZone} to use
-     * for formatting, unless overridden by local annotations.
-     * Initially set to {@link TimeZone#getDefault()}.
-     */
-    public final TimeZone getTimeZone() {
-        return _base.getTimeZone();
     }
 
     /**

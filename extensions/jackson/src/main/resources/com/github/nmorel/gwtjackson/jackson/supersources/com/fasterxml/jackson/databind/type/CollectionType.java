@@ -1,15 +1,13 @@
 package com.fasterxml.jackson.databind.type;
 
-import java.lang.reflect.TypeVariable;
-
 import com.fasterxml.jackson.databind.JavaType;
 
 /**
  * Type that represents Java Collection types (Lists, Sets).
  */
 public final class CollectionType
-    extends CollectionLikeType
-{
+        extends CollectionLikeType {
+
     private static final long serialVersionUID = 1L;
 
     /*
@@ -20,8 +18,7 @@ public final class CollectionType
 
     private CollectionType(Class<?> collT, TypeBindings bindings,
             JavaType superClass, JavaType[] superInts, JavaType elemT,
-            Object valueHandler, Object typeHandler, boolean asStatic)
-    {
+            Object valueHandler, Object typeHandler, boolean asStatic) {
         super(collT, bindings, superClass, superInts, elemT, valueHandler, typeHandler, asStatic);
     }
 
@@ -48,13 +45,8 @@ public final class CollectionType
     public static CollectionType construct(Class<?> rawType, JavaType elemT) {
         // First: may need to fabricate TypeBindings (needed for refining into
         // concrete collection types, as per [databind#1102])
-        TypeVariable<?>[] vars = rawType.getTypeParameters();
         TypeBindings bindings;
-        if ((vars == null) || (vars.length != 1)) {
-            bindings = TypeBindings.emptyBindings();
-        } else {
-            bindings = TypeBindings.create(rawType, elemT);
-        }
+        bindings = TypeBindings.emptyBindings();
         return new CollectionType(rawType, bindings,
                 // !!! TODO: Wrong, does have supertypes, but:
                 _bogusSuperClass(rawType), null, elemT,
@@ -76,7 +68,7 @@ public final class CollectionType
         return new CollectionType(_class, _bindings, _superClass, _superInterfaces,
                 contentType, _valueHandler, _typeHandler, _asStatic);
     }
-    
+
     @Override
     public CollectionType withTypeHandler(Object h) {
         return new CollectionType(_class, _bindings,
@@ -84,8 +76,7 @@ public final class CollectionType
     }
 
     @Override
-    public CollectionType withContentTypeHandler(Object h)
-    {
+    public CollectionType withContentTypeHandler(Object h) {
         return new CollectionType(_class, _bindings,
                 _superClass, _superInterfaces, _elementType.withTypeHandler(h),
                 _valueHandler, _typeHandler, _asStatic);
@@ -98,7 +89,7 @@ public final class CollectionType
     }
 
     @Override
-    public  CollectionType withContentValueHandler(Object h) {
+    public CollectionType withContentValueHandler(Object h) {
         return new CollectionType(_class, _bindings,
                 _superClass, _superInterfaces, _elementType.withValueHandler(h),
                 _valueHandler, _typeHandler, _asStatic);
@@ -129,8 +120,7 @@ public final class CollectionType
      */
 
     @Override
-    public String toString()
-    {
-        return "[collection type; class "+_class.getName()+", contains "+_elementType+"]";
+    public String toString() {
+        return "[collection type; class " + _class.getName() + ", contains " + _elementType + "]";
     }
 }

@@ -1,6 +1,5 @@
 package com.fasterxml.jackson.databind.util;
 
-import java.io.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -20,19 +19,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * but at this point we really try to keep external deps to minimum. But perhaps
  * a shaded variant may be used one day.
  */
-public class LRUMap<K,V>
-    implements java.io.Serializable
-{
+public class LRUMap<K, V>
+        implements java.io.Serializable {
+
     private static final long serialVersionUID = 1L;
 
     protected final transient int _maxEntries;
 
-    protected final transient ConcurrentHashMap<K,V> _map;
-    
-    public LRUMap(int initialEntries, int maxEntries)
-    {
+    protected final transient ConcurrentHashMap<K, V> _map;
+
+    public LRUMap(int initialEntries, int maxEntries) {
         // We'll use concurrency level of 4, seems reasonable
-        _map = new ConcurrentHashMap<K,V>(initialEntries, 0.8f, 4);
+        _map = new ConcurrentHashMap<K, V>(initialEntries, 0.8f);
         _maxEntries = maxEntries;
     }
 
@@ -63,12 +61,19 @@ public class LRUMap<K,V>
         }
         return _map.putIfAbsent(key, value);
     }
-    
-    // NOTE: key is of type Object only to retain binary backwards-compatibility
-    public V get(Object key) {  return _map.get(key); }
 
-    public void clear() { _map.clear(); }
-    public int size() { return _map.size(); }
+    // NOTE: key is of type Object only to retain binary backwards-compatibility
+    public V get(Object key) {
+        return _map.get(key);
+    }
+
+    public void clear() {
+        _map.clear();
+    }
+
+    public int size() {
+        return _map.size();
+    }
 
     /*
     /**********************************************************
@@ -84,15 +89,7 @@ public class LRUMap<K,V>
      */
     protected transient int _jdkSerializeMaxEntries;
 
-    private void readObject(ObjectInputStream in) throws IOException {
-        _jdkSerializeMaxEntries = in.readInt();
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-        out.writeInt(_jdkSerializeMaxEntries);
-    }
-
     protected Object readResolve() {
-        return new LRUMap<Object,Object>(_jdkSerializeMaxEntries, _jdkSerializeMaxEntries);
+        return new LRUMap<Object, Object>(_jdkSerializeMaxEntries, _jdkSerializeMaxEntries);
     }
 }

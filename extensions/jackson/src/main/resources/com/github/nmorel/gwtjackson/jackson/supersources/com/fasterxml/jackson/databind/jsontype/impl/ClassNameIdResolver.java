@@ -67,8 +67,7 @@ public class ClassNameIdResolver
         }
         Class<?> cls;
         try {
-            cls = tf.findClass(id);
-        } catch (ClassNotFoundException e) {
+
             // 24-May-2016, tatu: Ok, this is pretty ugly, but we should always get
             //   DeserializationContext, just playing it safe
             if (ctxt instanceof DeserializationContext) {
@@ -82,7 +81,6 @@ public class ClassNameIdResolver
             throw new IllegalArgumentException("Invalid type id '" + id + "' (for id type 'Id.class'): " + e
                     .getMessage(), e);
         }
-        return tf.constructSpecializedType(_baseType, cls);
     }
 
     /*

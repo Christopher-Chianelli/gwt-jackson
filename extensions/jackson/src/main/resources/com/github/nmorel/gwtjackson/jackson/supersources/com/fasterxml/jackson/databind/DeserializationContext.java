@@ -1,8 +1,6 @@
 package com.fasterxml.jackson.databind;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -111,8 +109,6 @@ public abstract class DeserializationContext
 
     protected transient ObjectBuffer _objectBuffer;
 
-    protected transient DateFormat _dateFormat;
-
     /**
      * Lazily-constructed holder for per-call attributes.
      * 
@@ -198,17 +194,6 @@ public abstract class DeserializationContext
     @Override
     public Locale getLocale() {
         return _config.getLocale();
-    }
-
-    /**
-     * Method for accessing default TimeZone to use: convenience method for
-     *<pre>
-     *   getConfig().getTimeZone();
-     *</pre>
-     */
-    @Override
-    public TimeZone getTimeZone() {
-        return _config.getTimeZone();
     }
 
     /*
@@ -378,19 +363,6 @@ public abstract class DeserializationContext
         return _config.constructType(cls);
     }
 
-    /**
-     * Helper method that is to be used when resolving basic class name into
-     * Class instance, the reason being that it may be necessary to work around
-     * various ClassLoader limitations, as well as to handle primitive type
-     * signatures.
-     *
-     * @since 2.6
-     */
-    public Class<?> findClass(String className) throws ClassNotFoundException {
-        // By default, delegate to ClassUtil: can be overridden with custom handling
-        return getTypeFactory().findClass(className);
-    }
-
     /*
     /**********************************************************
     /* Public API, helper object recycling
@@ -536,37 +508,6 @@ public abstract class DeserializationContext
     /* Parsing methods that may use reusable/-cyclable objects
     /**********************************************************
      */
-
-    /**
-     * Convenience method for parsing a Date from given String, using
-     * currently configured date format (accessed using
-     * {@link DeserializationConfig#getDateFormat()}).
-     *<p>
-     * Implementation will handle thread-safety issues related to
-     * date formats such that first time this method is called,
-     * date format is cloned, and cloned instance will be retained
-     * for use during this deserialization round.
-     */
-    public Date parseDate(String dateStr) throws IllegalArgumentException {
-        try {
-            DateFormat df = getDateFormat();
-            return df.parse(dateStr);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException(StringUtil.format(
-                    "Failed to parse Date value '%s': %s", dateStr, e.getMessage()));
-        }
-    }
-
-    /**
-     * Convenience method for constructing Calendar instance set
-     * to specified time, to be modified and used by caller.
-     */
-    public Calendar constructCalendar(Date d) {
-        // 08-Jan-2008, tatu: not optimal, but should work for the most part; let's revise as needed.
-        Calendar c = Calendar.getInstance(getTimeZone());
-        c.setTime(d);
-        return c;
-    }
 
     /*
     /**********************************************************
@@ -1261,20 +1202,6 @@ public abstract class DeserializationContext
     /* Other internal methods
     /**********************************************************
      */
-
-    protected DateFormat getDateFormat() {
-        if (_dateFormat != null) {
-            return _dateFormat;
-        }
-        /* 24-Feb-2012, tatu: At this point, all timezone configuration
-         *    should have occurred, with respect to default dateformat
-         *    and timezone configuration. But we still better clone
-         *    an instance as formatters may be stateful.
-         */
-        DateFormat df = _config.getDateFormat();
-        _dateFormat = df = (DateFormat) df.clone();
-        return df;
-    }
 
     protected String determineClassName(Object instance) {
         return ClassUtil.getClassDescription(instance);

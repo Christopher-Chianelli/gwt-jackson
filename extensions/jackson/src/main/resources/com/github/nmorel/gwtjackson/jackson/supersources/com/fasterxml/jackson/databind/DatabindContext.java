@@ -2,7 +2,6 @@ package com.fasterxml.jackson.databind;
 
 import java.lang.reflect.Type;
 import java.util.Locale;
-import java.util.TimeZone;
 
 import com.fasterxml.jackson.annotation.*;
 
@@ -65,11 +64,6 @@ public abstract class DatabindContext {
      * @since 2.6
      */
     public abstract Locale getLocale();
-
-    /**
-     * @since 2.6
-     */
-    public abstract TimeZone getTimeZone();
 
     /**
      * @since 2.7
