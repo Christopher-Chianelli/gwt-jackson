@@ -1,7 +1,9 @@
 package com.fasterxml.jackson.databind;
 
 import java.io.IOException;
+import java.util.Locale;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.cfg.ContextAttributes;
@@ -13,6 +15,7 @@ import com.fasterxml.jackson.databind.ser.impl.ReadOnlyClassToSerializerMap;
 import com.fasterxml.jackson.databind.ser.impl.UnknownSerializer;
 import com.fasterxml.jackson.databind.ser.impl.WritableObjectId;
 import com.fasterxml.jackson.databind.ser.std.NullSerializer;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.util.ClassUtil;
 import com.github.nmorel.gwtjackson.jackson.client.util.ClassUtils;
 import com.github.nmorel.gwtjackson.jackson.client.util.StringUtil;
@@ -63,6 +66,11 @@ public abstract class SerializerProvider
     /* Configuration, general
     /**********************************************************
      */
+
+    /**
+     * Serialization configuration to use for serialization processing.
+     */
+    final protected SerializationConfig _config;
 
     /**
      * View used for currently active serialization, if any.
@@ -162,6 +170,7 @@ public abstract class SerializerProvider
      * instances.
      */
     public SerializerProvider() {
+        _config = null;
         _serializerCache = new SerializerCache();
         // Blueprints doesn't have access to any serializers...
         _knownSerializers = null;
@@ -180,6 +189,7 @@ public abstract class SerializerProvider
      */
     protected SerializerProvider(SerializerProvider src) {
         // since this is assumed to be a blue-print instance, many settings missing:
+        _config = null;
         _serializationView = null;
         _knownSerializers = null;
 
@@ -287,6 +297,36 @@ public abstract class SerializerProvider
     /* Access to general configuration
     /**********************************************************
      */
+
+    @Override
+    public final boolean isEnabled(MapperFeature feature) {
+        return _config.isEnabled(feature);
+    }
+
+    @Override
+    public final TypeFactory getTypeFactory() {
+        return _config.getTypeFactory();
+    }
+
+    @Override
+    public final boolean canOverrideAccessModifiers() {
+        return _config.canOverrideAccessModifiers();
+    }
+
+    @Override
+    public final JsonFormat.Value getDefaultPropertyFormat(Class<?> baseType) {
+        return _config.getDefaultPropertyFormat(baseType);
+    }
+
+    @Override
+    public Locale getLocale() {
+        return _config.getLocale();
+    }
+
+    @Override
+    public final SerializationConfig getConfig() {
+        return _config;
+    }
 
     /*
     /**********************************************************

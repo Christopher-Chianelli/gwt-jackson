@@ -12,10 +12,10 @@ package com.fasterxml.jackson.core;
  * Regular {@link java.io.IOException}s will be passed through as is.
  * Sub-class of {@link java.io.IOException} for convenience.
  */
-public class JsonProcessingException extends java.io.IOException
-{
+public class JsonProcessingException extends java.io.IOException {
+
     final static long serialVersionUID = 123; // Stupid eclipse...
-	
+
     protected JsonLocation _location;
 
     protected JsonProcessingException(String msg, JsonLocation loc, Throwable rootCause) {
@@ -51,8 +51,10 @@ public class JsonProcessingException extends java.io.IOException
     /**********************************************************
      */
 
-    public JsonLocation getLocation() { return _location; }
-    
+    public JsonLocation getLocation() {
+        return _location;
+    }
+
     /**
      * Method that allows accessing the original "message" argument,
      * without additional decorations (like location information)
@@ -60,7 +62,9 @@ public class JsonProcessingException extends java.io.IOException
      * 
      * @since 2.1
      */
-    public String getOriginalMessage() { return super.getMessage(); }
+    public String getOriginalMessage() {
+        return super.getMessage();
+    }
 
     /**
      * Method that allows accessing underlying processor that triggered
@@ -76,31 +80,36 @@ public class JsonProcessingException extends java.io.IOException
      *
      * @since 2.7
      */
-    public Object getProcessor() { return null; }
+    public Object getProcessor() {
+        return null;
+    }
 
     /*
     /**********************************************************
     /* Methods for sub-classes to use, override
     /**********************************************************
      */
-    
+
     /**
      * Accessor that sub-classes can override to append additional
      * information right after the main message, but before
      * source location information.
      */
-    protected String getMessageSuffix() { return null; }
+    protected String getMessageSuffix() {
+        return null;
+    }
 
     /*
     /**********************************************************
     /* Overrides of standard methods
     /**********************************************************
      */
-    
+
     /**
      * Default method overridden so that we can add location information
      */
-    @Override public String getMessage() {
+    @Override
+    public String getMessage() {
         String msg = super.getMessage();
         if (msg == null) {
             msg = "N/A";
@@ -124,5 +133,8 @@ public class JsonProcessingException extends java.io.IOException
         return msg;
     }
 
-    @Override public String toString() { return getClass().getName()+": "+getMessage(); }
+    @Override
+    public String toString() {
+        return getClass().getName() + ": " + getMessage();
+    }
 }

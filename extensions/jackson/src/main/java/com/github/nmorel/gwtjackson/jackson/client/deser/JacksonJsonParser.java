@@ -3,10 +3,6 @@ package com.github.nmorel.gwtjackson.jackson.client.deser;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import com.fasterxml.jackson.core.Base64Variant;
@@ -17,8 +13,13 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.json.JsonReadContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.nmorel.gwtjackson.client.stream.JsonReader;
+import com.github.nmorel.gwtjackson.jackson.client.JacksonObjectMapper;
+import com.google.gwt.user.client.Window;
 
 public class JacksonJsonParser extends JsonParser {
 
@@ -32,11 +33,10 @@ public class JacksonJsonParser extends JsonParser {
 
     Stack<String> fieldNameStack;
     Stack<JsonToken> tokenStack;
-    Stack<List<Object>> arrayStack;
-    Stack<Map<String, Object>> objectStack;
+    Stack<ArrayNode> arrayStack;
+    Stack<ObjectNode> objectStack;
     JsonToken currentToken;
     JsonToken lastClearedToken;
-    com.github.nmorel.gwtjackson.client.stream.JsonToken first;
 
     public JacksonJsonParser(JsonReader reader) {
         this.reader = reader;
@@ -46,9 +46,9 @@ public class JacksonJsonParser extends JsonParser {
 
         this.fieldNameStack = new Stack<String>();
         this.tokenStack = new Stack<JsonToken>();
-        this.arrayStack = new Stack<List<Object>>();
-        this.objectStack = new Stack<Map<String, Object>>();
-        this.codec = new ObjectMapper();
+        this.arrayStack = new Stack<ArrayNode>();
+        this.objectStack = new Stack<ObjectNode>();
+        this.codec = new JacksonObjectMapper();
     }
 
     @Override
@@ -248,24 +248,22 @@ public class JacksonJsonParser extends JsonParser {
     @Override
     public JsonToken nextToken() throws IOException {
         isCurrentTokenCleared = false;
-        if (null == first) {
-            first = reader.peek();
-        }
+
         switch (reader.peek()) {
             case BEGIN_ARRAY:
                 reader.beginArray();
                 parsingContext = parsingContext.createChildArrayContext(reader.getLineNumber(), reader
                         .getColumnNumber());
-                tokenStack.add(JsonToken.START_ARRAY);
-                arrayStack.add(new ArrayList<Object>());
+                tokenStack.push(JsonToken.START_ARRAY);
+                arrayStack.push(JsonNodeFactory.instance.arrayNode());
                 currentToken = JsonToken.START_ARRAY;
                 break;
             case BEGIN_OBJECT:
                 reader.beginObject();
                 parsingContext = parsingContext.createChildObjectContext(reader.getLineNumber(), reader
                         .getColumnNumber());
-                tokenStack.add(JsonToken.START_OBJECT);
-                objectStack.add(new HashMap<String, Object>());
+                tokenStack.push(JsonToken.START_OBJECT);
+                objectStack.push(JsonNodeFactory.instance.objectNode());
                 currentToken = JsonToken.START_OBJECT;
                 break;
             case BOOLEAN:
@@ -278,16 +276,17 @@ public class JacksonJsonParser extends JsonParser {
                 }
                 break;
             case END_ARRAY:
+                reader.endArray();
                 parsingContext = parsingContext.clearAndGetParent();
                 value = arrayStack.pop();
                 tokenStack.pop();
                 handleToken(value);
-                reader.endArray();
                 currentToken = JsonToken.END_ARRAY;
                 break;
             case END_DOCUMENT:
-                return convertToJsonValue(first);
+                return null;
             case END_OBJECT:
+                reader.endObject();
                 parsingContext = parsingContext.clearAndGetParent();
                 value = objectStack.pop();
                 tokenStack.pop();
@@ -302,6 +301,7 @@ public class JacksonJsonParser extends JsonParser {
                 currentToken = JsonToken.FIELD_NAME;
                 break;
             case NULL:
+                reader.nextNull();
                 value = null;
                 handleToken(value);
                 currentToken = JsonToken.VALUE_NULL;
@@ -328,51 +328,20 @@ public class JacksonJsonParser extends JsonParser {
         return currentToken;
     }
 
-    private JsonToken convertToJsonValue(com.github.nmorel.gwtjackson.client.stream.JsonToken token) {
-        switch (token) {
-            case BEGIN_ARRAY:
-                return JsonToken.START_ARRAY;
-            case BEGIN_OBJECT:
-                return JsonToken.START_OBJECT;
-            case BOOLEAN:
-                if ((Boolean) value) {
-                    return JsonToken.VALUE_TRUE;
-                } else {
-                    return JsonToken.VALUE_FALSE;
-                }
-            case END_ARRAY:
-                return JsonToken.END_ARRAY;
-            case END_DOCUMENT:
-                return JsonToken.END_OBJECT;
-            case END_OBJECT:
-                return JsonToken.END_OBJECT;
-            case NAME:
-                return JsonToken.FIELD_NAME;
-            case NULL:
-                return JsonToken.VALUE_NULL;
-            case NUMBER:
-                if (value instanceof Integer) {
-                    return JsonToken.VALUE_NUMBER_INT;
-                } else {
-                    return JsonToken.VALUE_NUMBER_FLOAT;
-                }
-            case STRING:
-                return JsonToken.VALUE_STRING;
-            default:
-                return JsonToken.NOT_AVAILABLE;
-
-        }
-    }
-
     private void handleToken(Object value) {
         parsingContext.setCurrentValue(value);
         switch (tokenStack.peek()) {
             case START_ARRAY:
-                arrayStack.peek().add(value);
+                if (!arrayStack.isEmpty()) {
+                    arrayStack.peek().add(convertToJsonNode(value));
+                }
                 break;
             case FIELD_NAME:
-                currentName = fieldNameStack.pop();
-                objectStack.peek().put(currentName, value);
+            case START_OBJECT:
+                if (!objectStack.isEmpty()) {
+                    currentName = fieldNameStack.pop();
+                    objectStack.peek().set(currentName, convertToJsonNode(value));
+                }
                 break;
             case NOT_AVAILABLE:
             case VALUE_EMBEDDED_OBJECT:
@@ -387,6 +356,27 @@ public class JacksonJsonParser extends JsonParser {
             default:
                 break;
 
+        }
+    }
+
+    private JsonNode convertToJsonNode(Object object) {
+        if (null == object) {
+            return JsonNodeFactory.instance.nullNode();
+        }
+        if (object instanceof JsonNode) {
+            return (JsonNode) object;
+        } else if (object instanceof Boolean) {
+            return JsonNodeFactory.instance.booleanNode((Boolean) object);
+        } else if (object instanceof String) {
+            return JsonNodeFactory.instance.textNode((String) object);
+        } else if (object instanceof Double) {
+            return JsonNodeFactory.instance.numberNode((Double) object);
+        } else if (object instanceof Integer) {
+            return JsonNodeFactory.instance.numberNode((Integer) object);
+        } else if (object instanceof BigInteger) {
+            return JsonNodeFactory.instance.numberNode((BigInteger) object);
+        } else {
+            throw new IllegalStateException("Class " + object.getClass().getName() + " cannot be cast to a JsonNode.");
         }
     }
 

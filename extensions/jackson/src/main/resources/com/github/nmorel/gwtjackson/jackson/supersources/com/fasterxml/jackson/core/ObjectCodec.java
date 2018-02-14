@@ -21,15 +21,17 @@ import com.fasterxml.jackson.core.type.TypeReference;
  * defined in the "jackson-databind".
  */
 public abstract class ObjectCodec
-    extends TreeCodec // since 2.3
-    implements Versioned // since 2.3
+        extends TreeCodec // since 2.3
+        implements Versioned // since 2.3
 {
-    protected ObjectCodec() { }
+
+    protected ObjectCodec() {
+    }
 
     // Since 2.3
     @Override
     public abstract Version version();
-    
+
     /*
     /**********************************************************
     /* API for de-serialization (JSON-to-Object)
@@ -47,7 +49,7 @@ public abstract class ObjectCodec
      * can not be introspected when using this method.
      */
     public abstract <T> T readValue(JsonParser p, Class<T> valueType)
-        throws IOException;
+            throws IOException;
 
     /**
      * Method to deserialize JSON content into a Java type, reference
@@ -57,7 +59,7 @@ public abstract class ObjectCodec
      * parameterized (generic) container type.
      */
     public abstract <T> T readValue(JsonParser p, TypeReference<?> valueTypeRef)
-        throws IOException;
+            throws IOException;
 
     /**
      * Method to deserialize JSON content into a POJO, type specified
@@ -66,28 +68,28 @@ public abstract class ObjectCodec
      * {@link java.util.Map}).
      */
     public abstract <T> T readValue(JsonParser p, ResolvedType valueType)
-        throws IOException;
+            throws IOException;
 
     /**
      * Method for reading sequence of Objects from parser stream,
      * all with same specified value type.
      */
     public abstract <T> Iterator<T> readValues(JsonParser p, Class<T> valueType)
-        throws IOException;
+            throws IOException;
 
     /**
      * Method for reading sequence of Objects from parser stream,
      * all with same specified value type.
      */
     public abstract <T> Iterator<T> readValues(JsonParser p, TypeReference<?> valueTypeRef)
-        throws IOException;
-    
+            throws IOException;
+
     /**
      * Method for reading sequence of Objects from parser stream,
      * all with same specified value type.
      */
     public abstract <T> Iterator<T> readValues(JsonParser p, ResolvedType valueType)
-        throws IOException;
+            throws IOException;
 
     /*
     /**********************************************************
@@ -119,10 +121,10 @@ public abstract class ObjectCodec
      */
     @Override
     public abstract <T extends TreeNode> T readTree(JsonParser p) throws IOException;
-    
+
     @Override
     public abstract void writeTree(JsonGenerator gen, TreeNode tree) throws IOException;
-    
+
     /**
      * Method for construct root level Object nodes
      * for Tree Model instances.
@@ -150,14 +152,14 @@ public abstract class ObjectCodec
     /* Extended tree conversions beyond TreeCodec
     /**********************************************************
      */
-    
+
     /**
      * Convenience method for converting given JSON tree into instance of specified
      * value type. This is equivalent to first constructing a {@link JsonParser} to
      * iterate over contents of the tree, and using that parser for data binding.
      */
     public abstract <T> T treeToValue(TreeNode n, Class<T> valueType)
-        throws JsonProcessingException;
+            throws JsonProcessingException;
 
     /*
     /**********************************************************
@@ -169,7 +171,9 @@ public abstract class ObjectCodec
      * @deprecated Since 2.1: Use {@link #getFactory} instead.
      */
     @Deprecated
-    public JsonFactory getJsonFactory() { return getFactory(); }
+    public JsonFactory getJsonFactory() {
+        return getFactory();
+    }
 
     /**
      * Accessor for finding underlying data format factory
@@ -177,5 +181,7 @@ public abstract class ObjectCodec
      * 
      * @since 2.1
      */
-    public JsonFactory getFactory() { return getJsonFactory(); }
+    public JsonFactory getFactory() {
+        return new JsonFactory();
+    }
 }

@@ -143,10 +143,18 @@ public abstract class DeserializationContext
      * Copy-constructor for use with <code>copy()</code> by {@link ObjectMapper#copy()}
      */
     protected DeserializationContext(DeserializationContext src) {
-        _config = src._config;
-        _featureFlags = src._featureFlags;
-        _view = src._view;
-        _injectableValues = null;
+        if (null == src) {
+            _featureFlags = 0;
+            _config = null;
+            _injectableValues = null;
+            _view = null;
+            _attributes = null;
+        } else {
+            _config = src._config;
+            _featureFlags = src._featureFlags;
+            _view = src._view;
+            _injectableValues = null;
+        }
     }
 
     /*

@@ -15,8 +15,8 @@ import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.json.JsonWriteContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nmorel.gwtjackson.client.stream.JsonWriter;
+import com.github.nmorel.gwtjackson.jackson.client.JacksonObjectMapper;
 
 /**
  * Maps JsonGenerator methods to JsonWriter methods
@@ -33,7 +33,7 @@ public class JacksonGeneratorImpl extends JsonGenerator {
         this.writer = writer;
         context = JsonWriteContext.createRootContext(null);
         this.isClosed = false;
-        this.codec = new ObjectMapper();
+        this.codec = new JacksonObjectMapper();
     }
 
     @Override
@@ -221,8 +221,7 @@ public class JacksonGeneratorImpl extends JsonGenerator {
 
     @Override
     public void writeObject(Object value) throws IOException {
-        context.writeValue();
-        codec.writeValue(this, value);
+        throw new UnsupportedOperationException();
     }
 
     @Override
